@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "template"
+name = "shop"
 version = "0.1.0"
 description = ""
 authors = ["jslee <dlwhdtjd098@naver.com>"]
