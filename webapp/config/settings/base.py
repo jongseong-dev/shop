@@ -130,3 +130,7 @@ EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "dlwhdtjd098@gmail.com")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 EMAIL_PORT = os.environ.get("EMAIL_PORT", 587)
 EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", True)
+
+
+# 쇼핑 카트 세션 설정
+CART_SESSION_ID = "cart"  # 사용자 세션에 카트를 저장하는 데 사용할 키.
