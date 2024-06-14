@@ -167,3 +167,49 @@ class Cart:
         self.save()
 
 ```
+
+## 현재 카트에 대한 콘텍스트 프로세서 생성하기
+- 카트에 아이템이 포함되어 있을 땐 "Your cart is empty."라는 메시지가 표시되지 말아야 한다.
+- 해당 메시지는 모든 페이지에 표시되어야 하므로 요청을 처리하는 뷰에 관계없이 요청 콘텍스트에 현재 카트를 포함하도록 콘텍스트 프로세서를 만들어야 한다.
+
+### 콘텍스트 프로세서 개념
+- 콘텍스트 프로세서는 요청 객체를 인수로 받아서 요청 콘텍스트에 추가된 딕셔너리를 반환하는 파이썬 함수이다.
+- 모든 템플릿에서 전역적으로 사용할 수 있는 함수를 만들어야 할 때 유용하다.
+- 다음과 같은 템플릿 콘텍스트 프로세서가 포함된다.
+  - django.template.context_processors.debug: 요청에서 실행된 SQL 쿼리 목록을 출력하는 콘텍스트의 debug와 sql_queries 변수를 설정한다.
+  - django.template.context_processors.request: 콘텍스트의 request 변수를 설정한다.
+  - django.contrib.auth.context_processors.auth: 요청의 user 변수를 설정한다.
+  - django.contrib.messages.context_processors.messages: 콘텍스트에 메시지 프레임워크를 사용해서 생성된 모든 메시지를 담는 message 변수를 설정한다.
+
+### 사용하보기
+- `cart/context_processors.py` 파일을 생성하고 다음과 같이 작성한다.
+```python
+from cart.cart import Cart
+
+
+def cart(request):
+    return {"cart": Cart(request)}
+
+```
+- settings.py로 가서 해당 콘텍스트 프로세서를 등록한다.
+
+```python
+
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                ...,
+                "cart.context_processors.cart",
+            ],
+        },
+    },
+]
+```
+- cart 콘텍스트 프로세서는 템플릿이 랜더링 될 때마다 장고의 RequestContext를 사용해서 실행된다.
+- cart 변수는 템플릿의 콘텍스트에 설정된다.
+- 콘텍스트 프로세서는 RequestContext를 사용하는 모든 요청에서 실행된다.   
+특히 데이터베이스 쿼리와 관련된 기능이 모든 템플릿에 필요하지 않은 경우, 콘텍스트 프로세 대신 커스텀 템플릿 태그를 만드는 것이 좋다.
