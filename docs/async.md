@@ -21,3 +21,36 @@
 - Celery는 특정 시간에 작업을 실행하도록 하는 Scheduler도 제공한다.
 - 메시지 브로커로는 `RabbitMQ`를 사용해보자
 - RabbitMQ는 AMQP(Advanced Message Queuing Protocol)를 구현한 오픈 소스 메시지 브로커이다.
+
+## 세팅하기
+
+### RabbitMQ
+
+- docker로 실행하기
+```bash
+docker run -dit --name rabbitmq \
+       -e RABBITMQ_DEFAULT_USER=user \   # docker default user를 guest 대신 설정하기
+       -e RABBITMQ_DEFAULT_PASS=<password> \
+       -p 5672:5672 \
+       -p 15672:15672 \
+       rabbitmq:3-management
+```
+
+### Celery
+- 라이브러리 설치
+```bash
+pip install celery
+```
+- 설정
+```python
+import os
+from celery import Celery
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.local")
+app = Celery("config")  # 애플리케이션 인스턴스 생성
+
+# 커스텀 구성으로 로드한다. namespace 속성은 settings.py 파일에 Celery 관련 설정이 가질 접두사를 지정한다.
+# 예: CELERY_BROKER_URL
+app.config_from_object("django.conf:settings", namespace="CELERY")
+app.autodiscover_tasks()  # 각 애플리케이션 디렉터리에서 tasks.py 파일을 찾아 로드한다.
+```
