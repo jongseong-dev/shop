@@ -1,10 +1,15 @@
 version: "3.8"
 
 services:
+  message_queue:
+    image: rabbitmq:3.13-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
   db:
     image: postgres:15.6-alpine3.19
     volumes:
-      - blog_site_db_volume:/var/lib/postgresql/data
+      - psql_volume:/var/lib/postgresql/data
     environment:
       - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
@@ -29,6 +34,7 @@ services:
       - DJANGO_SETTINGS_MODULE=config.settings.local
     depends_on:
       - db
+      - message_queue
   test_web:
     build:
       context: .
@@ -42,5 +48,6 @@ services:
       - DB_PORT=5432
     depends_on:
       - db
+      - message_queue
 volumes:
-  blog_site_db_volume:
+  psql_volume:
