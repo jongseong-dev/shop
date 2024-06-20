@@ -41,8 +41,11 @@ docker run -dit --name rabbitmq \
 ```bash
 pip install celery
 ```
-- 설정
+
+1. celery 기본 환경 설정하기
 ```python
+# settings.py와 같은 레벨에 celery.py을 만들어서 해당 설정 추가
+
 import os
 from celery import Celery
 
@@ -54,3 +57,18 @@ app = Celery("config")  # 애플리케이션 인스턴스 생성
 app.config_from_object("django.conf:settings", namespace="CELERY")
 app.autodiscover_tasks()  # 각 애플리케이션 디렉터리에서 tasks.py 파일을 찾아 로드한다.
 ```
+
+2. settings.py __init__.py 에 Celery load 되는 설정하기
+```python
+
+from config.settings.celery import app as celery_app
+
+__all__ = ["celery_app"]
+```
+
+3. celery 실행하기 
+```bash
+celery -A config worker -l info 
+```
+
+
