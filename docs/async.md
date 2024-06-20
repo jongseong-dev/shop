@@ -59,9 +59,10 @@ app.autodiscover_tasks()  # 각 애플리케이션 디렉터리에서 tasks.py �
 ```
 
 2. settings.py __init__.py 에 Celery load 되는 설정하기
+
 ```python
 
-from config.settings.celery import app as celery_app
+from config.celery import app as celery_app
 
 __all__ = ["celery_app"]
 ```
@@ -71,4 +72,45 @@ __all__ = ["celery_app"]
 celery -A config worker -l info 
 ```
 
+## celery 모니터링
 
+### Flower
+- web dashboard를 제공
+- 설치하기 & 실행하기
+```bash
+ pip install flower
+ celery -A config.settings flower
+```
+
+### DB에 결과 저장하기
+- db에 결과가 저장
+- 설치하기 & 실행하기
+```bash
+pip install django-celery-results
+```
+```python
+# settings.py
+
+INSTALLED_APPS = [
+    ...
+    "django_celery_results",
+]
+```
+```bash
+python manage.py migrate django_celery_results
+```
+
+
+## 트러블 슈팅
+### 문제상황
+ - celery와 rabbitmq를 정상적으로 띄우고 tasks도 정상적으로 등록하였는데, succeed가 안되었다.
+ - 즉 message queue에 등록만 되고 실제로 작업이 실행이 안되는 상황
+
+### 해결
+- 검색을 하던 중 windows에서는 gevent 라이브러리를 설치해서 worker를 실행할 때 지정해줘야 한다.
+- 출처: https://stackoverflow.com/questions/69769628/received-task-but-not-success-not-fail-message-how-to-fix
+```bash
+pip install gevent
+
+celery -A projectname worker -l info -P gevent
+```
