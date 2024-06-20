@@ -10,7 +10,6 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
-import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -35,6 +34,7 @@ INSTALLED_APPS = [
     # libs
     "rest_framework",
     "django_filters",
+    "django_celery_results",
     # apps
     "shop.apps.ShopConfig",
     "cart.apps.CartConfig",
@@ -128,12 +128,11 @@ REST_FRAMEWORK = {
 }
 
 # SMTP 서버 구성
-EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
-EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "dlwhdtjd098@gmail.com")
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
-EMAIL_PORT = os.environ.get("EMAIL_PORT", 587)
-EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", True)
-
+EMAIL_BACKEND = (
+    "django.core.mail.backends.console.EmailBackend"  # email을 실제로 보내고 싶지 않을 때
+)
 
 # 쇼핑 카트 세션 설정
 CART_SESSION_ID = "cart"  # 사용자 세션에 카트를 저장하는 데 사용할 키.
+
+CELERY_RESULT_BACKEND = "django-db"

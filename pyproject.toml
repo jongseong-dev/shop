@@ -13,6 +13,10 @@ markdown = "^3.6"
 django-filter = ">=23.5,<24.0"
 psycopg2-binary = "^2.9.9"
 pillow = "9.2.0"
+celery = "5.2.7"
+flower = "1.1.0"
+django-celery-results = "^2.5.1"
+gevent = "^24.2.1"
 
 
 [tool.poetry.group.lint.dependencies]
