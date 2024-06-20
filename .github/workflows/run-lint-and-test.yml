@@ -28,12 +28,15 @@ jobs:
         ports:
           - 5432:5432
       rabbitmq:
-        image: rabbitmq
+        image: rabbitmq:management
         options: >-
           --health-cmd "rabbitmq-diagnostics -q ping"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+        ports:
+            - 5672:5672
+            - 15672:15672
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
