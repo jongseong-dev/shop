@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -136,3 +137,8 @@ EMAIL_BACKEND = (
 CART_SESSION_ID = "cart"  # 사용자 세션에 카트를 저장하는 데 사용할 키.
 
 CELERY_RESULT_BACKEND = "django-db"
+
+
+# Stripe
+STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY")
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
