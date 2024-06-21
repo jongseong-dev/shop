@@ -36,4 +36,16 @@ STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
 ### 결제 프로세스 구축하기
 
 1. 앱 생성
-2. 
+2. stripe checkout 통합하기
+    - payment_process: stripe 결제 세션을 생성하고 클라이언트를 Stirpe에서 호스팅하는 결제 폼으로 리디렉션 한다.
+    - payment_completed: 결제 성공 메시지를 표시
+    - payment_canceled: 결제 취소 메시지를 표시
+
+### 결제 처리 흐름
+
+1. 주문이 생성되면 사용자는 `payment_process`뷰로 리디렉션 된다. 주문 요약과 결제를 진행할 수 있는 버튼이 사용자에게 표시된다.
+2. 사용자가 결제를 진행하면 Stripe 결제 세션이 생성된다.    
+결제 세션에는 사용자가 구매할 항목의 목록, 결제 성공 후 사용자를 리디렉션할 URL, 결제가 취소된 경우 사용자를 리디렉션할 URL이 포함된다.
+3. 이 보기는 사용자를 Stripe 호스팅 결제 페이지로 리디렉션한다. 이 페이지에는 결제폼이 포함된다. 고객이 신용카드 세부 정보를 입력하고 폼을 제출한다.
+4. Stripe에서 결제를 처리하고 클라이언트를 payment_completed 뷰로 리디렉션 한다.   
+고객이 결제를 완료하지 않으면 Stripe는 대신 고객을 pament_canceled 뷰로 리디렉션 한다.
