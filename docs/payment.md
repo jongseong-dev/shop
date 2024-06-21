@@ -98,3 +98,72 @@ def payment_process(request):
 | 결제 성공       | 4242 4242 4242 4242 | 아무 숫자 | 미래의 아무 날짜 |
 | 결제 실패       | 4000 0000 0000 0002 | 아무 숫자 | 미래의 아무 날짜 |
 | #D 보안 인증 필요 | 4000 0025 0000 3155 | 아무 숫자 | 미래의 아무 날짜 |
+
+
+## 웹후크를 사용한 결제 알림 받기
+- stripe는 웹후크를 사용해서 실시간 이벤트를 앱에 푸쉬할 수 있다.
+- 콜백이라고도 하는 웹후크는 요청 중심의 API가 아닌 이벤트 중심의 API로 생각할 수 있다.
+- 새로운 결제가 완료되었는지 확인하기 위해 Stripe API를 폴링하는 대신 Stripe가 앱의 URL로 HTTP 요청을 전송해서 결제 성공 여부를 실시간으로 알릴 수 있다.
+
+### 웹후크 엔드 포인트 만들기
+
+- dashboard에서 웹후크 메뉴로 들어간다.
+- `Test in a local environment` 버튼을 클릭한다.
+- `endpoint_secret`를 복사해서 settings.py에 추가한다.
+
+```python
+# payment.webhooks.py
+
+
+import stripe
+from django.conf import settings
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+
+from orders.models import Order
+
+
+@csrf_exempt  # 모든 POST 요청에 기본적으로 수행되는 CSRF 유효성 검사를 장고가 수행하지 못하도록 하는데 사용한다.
+def stripe_webhook(request):
+    payload = request.body
+    sig_header = request.META["HTTP_STRIPE_SIGNATURE"]
+    event = None
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
+        )
+    except ValueError:
+        # 잘못된 페이로드
+        return HttpResponse(status=400)
+    except stripe.error.SignatureVerificationError:
+        # 잘못된 서명
+        return HttpResponse(status=400)
+    if event.type == "checkout.session.completed":
+        session = event.data.object
+        if session.mode == "payment" and session.payment_status == "paid":
+            try:
+                order = Order.objects.get(id=session.client_reference_id)
+            except Order.DoesNotExist:
+                return HttpResponse(status=404)
+            # 주문을 결제 완료로 표시
+            order.paid = True
+            order.save()
+    return HttpResponse(status=200)
+```
+
+### 웹후크 알림 테스트하기
+
+1. [stripe cli 설치](https://docs.stripe.com/stripe-cli)
+2. shell에서 `stripe login` 입력
+3. 브라우저 창이 떴다면 `stripe listen --forward-to localhost:8000/payment/webhooks/` 입력
+4. `STRIPE_WEBHOOK_SECRET`괴 cmd창에 표시된 키가 같은지 확인
+5. https://dashboard.stripe.com/test/webhooks 로 접속해서 local listeners에 로컬 PC가 등록되었는지 확인하기
+6. 결제를 완료하면 stripe cli에서 이벤트를 확인할 수 있다.
+   ![img.png](image/payment_webhook.png)
+- NOTE
+   - 프로덕션 환경에서는 Stripe CLI가 필요하지 않다. 다만 호스팅된 앱의 URL을 사용해서 웹후크 앤드포인트를 추가하면 된다.
+
+## Orders 앰에서 Stripe 결제 참조하기
+
+- 각 stripe 결제에는 고유의 식별자가 있다. 해당 식별자를 통해 각 주문을 Stripe 결제와 연결할 수 있다.
+
