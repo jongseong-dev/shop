@@ -49,3 +49,38 @@ STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
 3. 이 보기는 사용자를 Stripe 호스팅 결제 페이지로 리디렉션한다. 이 페이지에는 결제폼이 포함된다. 고객이 신용카드 세부 정보를 입력하고 폼을 제출한다.
 4. Stripe에서 결제를 처리하고 클라이언트를 payment_completed 뷰로 리디렉션 한다.   
 고객이 결제를 완료하지 않으면 Stripe는 대신 고객을 pament_canceled 뷰로 리디렉션 한다.
+
+### 코드 살펴보기
+
+- 결제 프로세스
+
+```python
+# views.py
+
+import stripe
+from django.shortcuts import get_object_or_404, redirect, render
+
+from orders.models import Order
+
+
+def payment_process(request):
+    order_id = request.session.get("order_id", None)
+    order = get_object_or_404(Order, id=order_id)
+    if request.method == "POST":
+        success_url = request.build_absolute_uri("payment:completed")
+        cancel_url = request.build_absolute_uri("payment:canceled")
+        # Stripe 결제 세션 데이터
+        session_data = {
+            "mode": "payment",  # 결제 세션의 모드이다. 일회성 결제를 뜻함. 구독 같은 반복적인 결제는 `recurring payment`로 설정
+            "client_reference_id": order.id,  # 결제의 고유한 래퍼런스이다. 이 정보를 사용해서 Stripe 결제 세션에 전달한다. 주문 ID를 전달하면 Stripe 결제를 시스템에서 주문에 연결하고, Stripe로부터 결제 알림을 수신해서 주문을 결제된 것으로 표시할 수 있다.
+            "success_url": success_url,  # 결제가 성공한 경우 Stripe에서 사용자를 리디렉션할 URL이다. request.build_absolute_uri() 함수를 사용해서 절대 URI을 생성한다.
+            "cancel_url": cancel_url,
+            "line_items": [],  # 나중에 구매할 주문 항목들로 채운다.
+        }
+        # stripe 결제 세션 생성
+        session = stripe.checkout.Session.create(**session_data)
+        # stripe 결제 양식으로 리디렉션
+        return redirect(session.url, code=303)
+    else:
+        return render(request, "payment/process.html", locals())   # locals()로 지역변수를 context 로 넘김
+```
