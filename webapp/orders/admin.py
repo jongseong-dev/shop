@@ -1,4 +1,8 @@
+import csv
+import datetime
+
 from django.contrib import admin
+from django.http import HttpResponse
 from django.utils.safestring import mark_safe
 
 from orders.models import OrderItem, Order
@@ -20,6 +24,36 @@ def order_payment(obj: Order):
 order_payment.short_description = "Stripe Payment"
 
 
+def export_to_csv(modeladmin, request, queryset):
+    opts = modeladmin.model._meta
+    content_disposition = f"attachment; filename={opts.verbose_name}.csv"
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = content_disposition
+    writer = csv.writer(response)
+    fields = [
+        field
+        for field in opts.get_fields()
+        if not field.many_to_many and not field.one_to_many
+    ]
+    # 헤더 정보로 첫 행 작성
+    writer.writerow([field.verbose_name for field in fields])
+    # 각 행의 데이터 작성
+    for obj in queryset:
+        data_row = []
+        for field in fields:
+            value = getattr(obj, field.name)
+            if isinstance(value, datetime.datetime):
+                value = value.strftime("%Y/%m/%d")
+            data_row.append(value)
+        writer.writerow(data_row)
+    return response
+
+
+export_to_csv.short_description = (
+    "Export to CSV"  # 관리 사이트의 작업(Action) 드롭다운 엘리먼트에 있는 작업의 표시 이름을 커스터마이징 한다.
+)
+
+
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     list_display = [
@@ -37,3 +71,4 @@ class OrderAdmin(admin.ModelAdmin):
     ]
     list_filter = ["paid", "created", "updated"]
     inlines = [OrderItemInline]
+    actions = [export_to_csv]
