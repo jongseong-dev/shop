@@ -34,10 +34,12 @@ def test_order_create_view(client_with_cart):
         },
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 302
     assert Order.objects.count() == 1
     assert OrderItem.objects.count() == 1
-    assert not client_with_cart.session[settings.CART_SESSION_ID]  # 빈 딕셔너리 {}
+    assert not client_with_cart.session.get(
+        settings.CART_SESSION_ID
+    )  # 빈 딕셔너리 {}
 
 
 @pytest.mark.django_db

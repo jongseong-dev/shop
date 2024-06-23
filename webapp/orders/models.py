@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 from shop.models import Product
@@ -16,6 +17,7 @@ class Order(models.Model):
         default=False,
         db_comment="결제 주문과 미결제 주문을 구분하기 위한 flag",
     )
+    stripe_id = models.CharField(max_length=250, blank=True)
 
     class Meta:
         ordering = ("-created",)
@@ -26,6 +28,18 @@ class Order(models.Model):
 
     def get_total_cost(self):
         return sum(item.get_cost() for item in self.items.all())
+
+    def get_stripe_url(self):
+        if not self.stripe_id:
+            # 연결된 결제 없음
+            return ""
+        if "_test_" in settings.STRIPE_SECRET_KEY:
+            # 테스트 결제를 위한 Stripe 경로
+            path = "/test/"
+        else:
+            # 실제 결제를 위한 Stripe 경로
+            path = "/"
+        return f"https://dashboard.stripe.com{path}payments/{self.stripe_id}"
 
 
 class OrderItem(models.Model):
