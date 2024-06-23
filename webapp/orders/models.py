@@ -16,6 +16,7 @@ class Order(models.Model):
         default=False,
         db_comment="결제 주문과 미결제 주문을 구분하기 위한 flag",
     )
+    stripe_id = models.CharField(max_length=250, blank=True)
 
     class Meta:
         ordering = ("-created",)
