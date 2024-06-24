@@ -44,7 +44,9 @@
 ### [비동기](docs/async.md)
 ### [결제주문](docs/payment.md)
 ### [주문을 CSV 파일로 내보내기](docs/csv.md)
-### [# 커스텀 뷰로 관리자 사이트 확장하기](docs/custom_view.md)
+### [커스텀 뷰로 관리자 사이트 확장하기](docs/custom_view.md)
+### [동적으로 PDF 인보이스 생성하기](docs/pdf_invoice.md)
+
 ----
 # 프로젝트 시작하기
 
