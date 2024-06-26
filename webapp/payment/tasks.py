@@ -1,5 +1,10 @@
+from io import BytesIO
+
+import weasyprint
 from celery import shared_task
+from django.conf import settings
 from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
 
 from orders.models import Order
 
@@ -17,4 +22,12 @@ def payment_completed(order_id):
     email = EmailMessage(
         subject, message, "dlwhdtjd098@gmail.com", [order.email]
     )
+    # PDF 생성
+    html = render_to_string("orders/order/pdf.html", {"order": order})
+    out = BytesIO()
+    stylesheets = [weasyprint.CSS(settings.STATIC_ROOT / "css/pdf.css")]
+    weasyprint.HTML(string=html).write_pdf(out, stylesheets=stylesheets)
+    # PDF 파일 첨부
+    email.attach(f"order_{order.id}.pdf", out.getvalue(), "application/pdf")
+    # 이메일 전송
     email.send()
