@@ -15,6 +15,6 @@ elif [ "$DJANGO_SETTINGS_MODULE" = "config.settings.test" ]; then
   python manage.py test
 elif [ "$DJANGO_SETTINGS_MODULE" = "config.settings.prod" ]; then
   python manage.py migrate
-  python manage.py collectstatic
+  python manage.py collectstatic --no-input
   gunicorn --bind 0:8000 webapp.wsgi:application
 fi
