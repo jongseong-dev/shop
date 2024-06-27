@@ -39,6 +39,14 @@ def payment_process(request):
                     "quantity": item.quantity,
                 }
             )
+        # Stripe 쿠폰
+        if order.coupon:
+            stripe_coupon = stripe.Coupon.create(
+                name=order.coupon.code,
+                percent_off=order.coupon.discount,
+                duration="once",
+            )
+            session_data["discounts"] = [{"coupon": stripe_coupon.id}]
         # stripe 결제 세션 생성
         session = stripe.checkout.Session.create(**session_data)
         # stripe 결제 양식으로 리디렉션
