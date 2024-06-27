@@ -1,6 +1,10 @@
+from decimal import Decimal
+
 from django.conf import settings
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
+from coupons.models import Coupon
 from shop.models import Product
 
 
@@ -18,6 +22,18 @@ class Order(models.Model):
         db_comment="결제 주문과 미결제 주문을 구분하기 위한 flag",
     )
     stripe_id = models.CharField(max_length=250, blank=True)
+    coupon = models.ForeignKey(
+        Coupon,
+        related_name="orders",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+    discount = models.IntegerField(
+        default=0,
+        help_text="쿠폰 할인 금액",
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+    )
 
     class Meta:
         ordering = ("-created",)
@@ -27,7 +43,8 @@ class Order(models.Model):
         return f"Order {self.id}"
 
     def get_total_cost(self):
-        return sum(item.get_cost() for item in self.items.all())
+        total_cost = self.get_total_cost_before_discount()
+        return total_cost - self.get_discount()
 
     def get_stripe_url(self):
         if not self.stripe_id:
@@ -40,6 +57,15 @@ class Order(models.Model):
             # 실제 결제를 위한 Stripe 경로
             path = "/"
         return f"https://dashboard.stripe.com{path}payments/{self.stripe_id}"
+
+    def get_total_cost_before_discount(self):
+        return sum(items.get_cost() for items in self.items.all())
+
+    def get_discount(self):
+        total_cost = self.get_total_cost_before_discount()
+        if self.discount:
+            return total_cost * (self.discount / Decimal(100))
+        return Decimal(0)
 
 
 class OrderItem(models.Model):
