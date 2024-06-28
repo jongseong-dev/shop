@@ -19,6 +19,7 @@ django-celery-results = "^2.5.1"
 gevent = "^24.2.1"
 stripe = "4.0.2"
 weasyprint = "^62.3"
+redis = "^5.0.7"
 
 
 [tool.poetry.group.lint.dependencies]
