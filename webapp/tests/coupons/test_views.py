@@ -6,7 +6,7 @@ from coupons.factory import CouponFactory
 
 @pytest.fixture
 def coupon():
-    return CouponFactory.create()
+    return CouponFactory.create(active=True)
 
 
 @pytest.fixture
