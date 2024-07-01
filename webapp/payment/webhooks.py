@@ -5,6 +5,8 @@ from django.views.decorators.csrf import csrf_exempt
 
 from orders.models import Order
 from payment.tasks import payment_completed
+from shop.models import Product
+from shop.recommender import Recommender
 
 
 @csrf_exempt  # 모든 POST 요청에 기본적으로 수행되는 CSRF 유효성 검사를 장고가 수행하지 못하도록 하는데 사용한다.
@@ -34,5 +36,12 @@ def stripe_webhook(request):
             # 결제 ID 저장
             order.stripe_id = session.payment_intent
             order.save()
+
+            # 결제 내역의 제품들을 추천 시스템을 위해 redis에 저장
+            product_ids = order.items.values_list("product_id")
+            products = Product.objects.filter(id__in=product_ids)
+            r = Recommender()
+            r.products_bought(products)
+
             payment_completed.delay(order.id)
     return HttpResponse(status=200)
