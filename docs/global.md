@@ -38,3 +38,27 @@
 ### gettext 툴킷 설치하기
 - macOS: `brew install gettext` or `brew link --force gettext`(강제로 링크하기)
 - windows: [django 문서 참조](https://docs.djangoproject.com/en/5.0/topics/i18n/translation/#gettext-on-windows)
+
+### 장고가 현재 언어를 결정하는 방법
+- 장고에는 요청 데이터를 기반으로 현재 언어를 결정하는 미들웨어가 함께 제공된다.
+- 이 미들웨어는 `django.middleware.locale.LocaleMiddleware`이다.
+- 해당 미들웨어는 다음과 같은 작업을 한다.
+  1. i18n_patterns를 사용하는 경우, 다시 말해 번역된 URL 패턴을 사용하는 경우에는 요청된 URL에서 언어 접두사를 찾아 현재 언어를 결정한다.
+  2. 언어 접두사를 찾을 수 없으면 현재 사용자의 세션에서 기존 `LANGUAGE_SESSION_KEY`를 찾는다.
+  3. 세션에 언어가 설정되어 있지 않은 경우, 현재 언어를 나타내는 쿠키를 찾는다 이 쿠키의 이름은 `LANGUAGE_COOKIE_NAME` 설정에서 제공할 수 있다. 기본적으로 이 쿠키의 이름은 `django_language`이다.
+  4. 이 쿠키를 찾을 수 없으면 요청의 `Accept-Language` HTTP 헤더를 찾는다.
+  5. Accept-Language 헤더에 언어가 지정되지 않은 경우, 장고는 `LANGUAGE_CODE` 설정에 정의된 언어를 사용한다.
+- 기본적으로 장고는 `LocaleMiddleware`를 사용하지 않는 한 `LANGUAGE_CODE` 설정에 정의된 언어를 사용 한다. 
+- 여기에 설명된 프로세스는 `LocaleMiddleware`를 사용할 때만 적용된다. 
+
+## 국제화를 위한 준비하기
+
+```python
+# settings.py
+
+LANGUAGES = [
+  ("en", "English"),
+  ("ko", "Korean"),
+]
+
+```
